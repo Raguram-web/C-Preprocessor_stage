@@ -8,3 +8,4 @@ void writeToFile(char(*line)[200],char*filename);
 void * remove_comments(char(*line)[200]);
 void *replace_macros(char (*line)[200]);
 void *include_headers(char (*line)[200]);
+void *include_system_headers(char (*line)[200]);
