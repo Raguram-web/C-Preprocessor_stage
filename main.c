@@ -14,11 +14,10 @@ int main(int argc,char**argv)
 	{
 		return 1;
 	}
-	line=include_headers(line);
-	  if(line == NULL)
-		  return 1;
 	line=remove_comments(line);
+	line=include_headers(line);
 	line=replace_macros(line);
+	line = include_system_headers(line);
 	writeToFile(line,argv[2]);
 	free(line);
 
