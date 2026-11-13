@@ -85,6 +85,103 @@ void *include_headers(char (*line)[200])
 
         strcpy(result[new_cnt++], line[i]);
     }
+    void *include_system_headers(char (*line)[200])
+{
+    char (*result)[200] = NULL;
+    char filename[200];
+    char buffer[200];
+    char *p;
+    int old_cnt = cnt;
+    int new_cnt = 0;
+
+    for (int i = 0; i < old_cnt; i++)
+    {
+        p = line[i];
+
+        while (*p == ' ' || *p == '\t')
+            p++;
+
+        if (strncmp(p, "#include", 8) == 0 &&
+            (p[8] == ' ' || p[8] == '\t'))
+        {
+            p += 8;
+
+            while (*p == ' ' || *p == '\t')
+                p++;
+
+            if (*p == '<' &&
+                sscanf(p, "<%199[^>]>", filename) == 1)
+            {
+                char path[300];
+
+                snprintf(path, sizeof(path),
+                         "/usr/include/%s", filename);
+
+                FILE *fp = fopen(path, "r");
+
+                if (fp == NULL)
+                {
+                    fprintf(stderr,
+                            "Cannot open system header: %s\n",
+                            filename);
+
+                    // Preserve original include line
+                    char (*temp)[200] = realloc(
+                        result, (new_cnt + 1) * sizeof(*result));
+
+                    if (temp == NULL)
+                    {
+                        free(result);
+                        free(line);
+                        return NULL;
+                    }
+
+                    result = temp;
+                    strcpy(result[new_cnt++], line[i]);
+                    continue;
+                }
+
+                while (fgets(buffer, sizeof(buffer), fp) != NULL)
+                {
+                    char (*temp)[200] = realloc(
+                        result, (new_cnt + 1) * sizeof(*result));
+
+                    if (temp == NULL)
+                    {
+                        fclose(fp);
+                        free(result);
+                        free(line);
+                        return NULL;
+                    }
+
+                    result = temp;
+                    strcpy(result[new_cnt++], buffer);
+                }
+
+                fclose(fp);
+                continue;
+            }
+        }
+
+        char (*temp)[200] = realloc(
+            result, (new_cnt + 1) * sizeof(*result));
+
+        if (temp == NULL)
+        {
+            free(result);
+            free(line);
+            return NULL;
+        }
+
+        result = temp;
+        strcpy(result[new_cnt++], line[i]);
+    }
+
+    free(line);
+    cnt = new_cnt;
+
+    return result;
+}
 
     free(line);
     cnt = new_cnt;
